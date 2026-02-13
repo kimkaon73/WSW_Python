@@ -4,27 +4,30 @@ from selenium import webdriver
 import time
 import datetime
 
-this_year = datetime.datetime.now()
-this_year = this_year.year
+# url을 이용해 response를 가져오고 html에 response에서 받아온 html 정보를 저장
+# 페이지 이동을 위한 변수 page 생성
+page = 1
+url = f"https://www.dreamspon.com/scholarship/list.html?page="+str(page)
+response = requests.get(url)
+html = response.text
 
-driver = webdriver.Chrome()
-url = "https://eclass.sch.ac.kr/boards/5e2110140584830a497a4894/posts"
-driver.get(url)
-time.sleep(3)
-html_content = driver.page_source
-# url 불러오기 ~ html 콘텐츠 저장
+# BeautifulSoup 객체 생성
+soup = BeautifulSoup(html, "html.parser")
 
-soup = BeautifulSoup(html_content, "html.parser")
+# 광고 혹은 배너의 정보를 받아오지 않도록 범위를 'tbody' 태그로 제한
+NoticeList = soup.find('tbody')
 
-# notice 변수에 .xnbql-post-title 클래스 태그를 불러와서 저장(공지의 제목들이 저장되어 있음)
-notices = soup.select(".xnbpl-post-title")
-# n_year 변수에 .xnbql-createdat 클래스 태그를 불러와서 저장(공지가 올라온 날짜가 저장되어있음)
-n_year = soup.select(".xnbpl-body-row-2")
+# 목록에서 title 태그 내에 저장된 제목만을 추출
+SubTitle = NoticeList.select('.title')
 
-print(f"[{this_year}]년도 공지글")
-for info in notices:
-    print(info.text,"\n")
-    if this_year != n_year.pop(0).text:
-        this_year = n_year
-        print(f"[{this_year}]년도 공지글")
-    
+# 목록에서 title 태그 내에 저장된 링크를 Link 리스트에 저장
+Link = []
+for ToLink in SubTitle:
+    Link.append("https://www.dreamspon.com"+ToLink.find('a')['href'])
+
+# Link를 가져오기 위한 변수 LinkNum을 생성
+LinkNum = 0
+for title in SubTitle:
+    print(title.text,"\n"+Link[LinkNum])
+    print()
+    LinkNum+=1
